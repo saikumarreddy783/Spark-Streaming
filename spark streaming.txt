@@ -1,0 +1,94 @@
+
+val ssc = new StreamingContext(sc, Seconds(1))
+val lines = ssc.socketTextStream(“localhost”, 9999)
+
+For example, map(func) takes func as an argument and applies it to each element, returning a new RDD.
+
+Here’s an example multiplying each line by 10:
+
+lines.map(x=>x.toInt*10).print()
+
+We’ll send some data with the Netcat or nc program available on most Unix-like systems. Spark is reading from port 9999, so we’ll have to make sure Netcat points there.
+
+prompt> nc –lk 9999
+12
+34
+
+120
+340
+
+flatmap() is similar, but can return 0 or more items.
+
+This example splits text, putting each word on separate lines:
+
+lines.flatMap(_.split(” “)).print()
+
+Let’s try it with the string “Spark is fun”:
+
+prompt> nc –lk 9999
+Spark is fun
+
+And here’s the output:
+
+Spark
+is
+fun
+
+count() is obvious enough. It counts the number of data elements.
+
+We can count the lines in our stream:
+
+lines.flatMap(_.split(” “)).count()
+
+And here are some lines:
+
+prompt> nc –lk 9999
+say
+hello
+to
+spark
+
+The output should be 4.
+
+reduce() is similar, but applies a function as an argument to the data elements instead of just adding them.
+
+We can use this to add up all the numbers:
+
+lines.map(x=>x.toInt).reduce(_+_).print()
+
+And let’s get some numbers into Spark Streaming:
+
+prompt> nc –lk 9999
+1
+3
+5
+7
+
+The answer should be 16.
+
+countByValue() counts the number of occurrences of each data set.
+
+We can use this to count the number of times each word occurs:
+
+lines.countByValue().print()
+
+We’ll include some duplicate lines just to show you how it works:
+
+prompt>nc –lk 9999
+spark
+spark
+is
+fun
+fun
+
+The output will look like this:
+
+(is,1)
+(spark,2)
+(fun,2)
+
+An alternate way we could do this is by using the reduceByKey() function:
+
+val words = lines.flatMap(_.split(” “))
+val wordCounts = words.map(x => (x, 1)).reduceByKey(_+_)
+wordCounts.print()
